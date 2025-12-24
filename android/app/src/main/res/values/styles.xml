@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Rice Yield App</string>
+    
+    <!-- File provider paths -->
+    <string name="app_provider_authority">com.example.rice_yield_app.fileprovider</string>
+    
+    <!-- Supabase redirect -->
+    <string name="supabase_redirect_host">login-callback</string>
+    <string name="supabase_redirect_scheme">com.example.rice_yield_app</string>
+</resources>

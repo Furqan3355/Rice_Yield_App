@@ -1,0 +1,776 @@
+# Firebase Setup Instructions for Rice Yield Predictor App
+
+This document provides comprehensive, step-by-step instructions for setting up Firebase for the Rice Yield Predictor Flutter app. It covers everything from creating a Firebase project to implementing security rules and integrating with your Flutter application.
+
+## Table of Contents
+1. [Prerequisites](#prerequisites)
+2. [Create Firebase Project](#create-firebase-project)
+3. [Enable Authentication](#enable-authentication)
+4. [Set Up Firestore Database](#set-up-firestore-database)
+5. [Configure Security Rules](#configure-security-rules)
+6. [Set Up Firebase Storage (Optional)](#set-up-firebase-storage-optional)
+7. [Configure Flutter App](#configure-flutter-app)
+8. [Implement Firestore Service](#implement-firestore-service)
+9. [Update Existing Services](#update-existing-services)
+10. [Testing and Deployment](#testing-and-deployment)
+11. [Troubleshooting](#troubleshooting)
+
+## Prerequisites
+
+Before starting, ensure you have:
+- A Google account
+- Flutter SDK installed (version 3.0 or higher)
+- Android Studio or VS Code with Flutter extensions
+- Basic knowledge of Firebase and Flutter
+
+## 1. Create Firebase Project
+
+### Step 1.1: Access Firebase Console
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Click "Create a project" or "Add project"
+3. Enter project name: "rice-yield-predictor"
+4. Choose whether to enable Google Analytics (recommended for production)
+5. Select Google Analytics account or create new one
+6. Click "Create project"
+
+### Step 1.2: Project Configuration
+1. Wait for project creation to complete
+2. Note down your Project ID (it will be something like "rice-yield-predictor-xxxxx")
+
+## 2. Enable Authentication
+
+### Step 2.1: Enable Authentication Service
+1. In Firebase Console, click "Authentication" in the left sidebar
+2. Click "Get started"
+3. Go to "Sign-in method" tab
+4. Enable the following providers:
+   - Email/Password (click enable)
+   - Google (optional, for social login)
+   - Phone (optional, for SMS verification)
+
+### Step 2.2: Configure Authentication Settings
+1. Under "Settings" > "User actions":
+   - Enable "Email enumeration protection" (recommended)
+   - Set up email templates for password reset, email verification
+2. Configure authorized domains if needed
+
+## 3. Set Up Firestore Database
+
+### Step 3.1: Create Firestore Database
+1. In Firebase Console, click "Firestore Database" in the left sidebar
+2. Click "Create database"
+3. Choose "Start in test mode" (we'll configure security rules later)
+4. Select a location for your database (choose the closest to your users)
+5. Click "Done"
+
+### Step 3.2: Create Collections
+
+#### Users Collection
+1. Click "Start collection"
+2. Collection ID: `users`
+3. Add first document with auto-ID
+4. Add fields based on schema:
+   - `email` (string): user@example.com
+   - `name` (string): John Doe
+   - `phone` (string, optional): +1234567890
+   - `profileImage` (string, optional): https://example.com/image.jpg
+   - `createdAt` (timestamp): Current timestamp
+
+#### Video Uploads Collection
+1. Click "Start collection"
+2. Collection ID: `video_uploads`
+3. Add first document with auto-ID
+4. Add fields:
+   - `userId` (string): Reference to user document ID
+   - `videoUrl` (string): https://example.com/video.mp4
+   - `thumbnailUrl` (string, optional): https://example.com/thumbnail.jpg
+   - `uploadedAt` (timestamp): Current timestamp
+   - `status` (string): "processing"
+   - `predictedYield` (number, optional): 1500.5
+
+#### Image Uploads Collection
+1. Click "Start collection"
+2. Collection ID: `image_uploads`
+3. Add first document with auto-ID
+4. Add fields:
+   - `userId` (string): Reference to user document ID
+   - `imageUrl` (string): https://example.com/image.jpg
+   - `thumbnailUrl` (string, optional): https://example.com/thumbnail.jpg
+   - `uploadedAt` (timestamp): Current timestamp
+   - `status` (string): "processing"
+   - `boundingBoxes` (string, optional): JSON string of bounding boxes
+
+#### Reports Collection
+1. Click "Start collection"
+2. Collection ID: `reports`
+3. Add first document with auto-ID
+4. Add fields:
+   - `userId` (string): Reference to user document ID
+   - `mediaId` (string): Reference to video_upload or image_upload document ID
+   - `mediaType` (string): "video" or "image" (indicates input type for the model)
+   - `createdAt` (timestamp): Current timestamp
+   - `predictedYield` (number): Rice yield prediction in kg/hectare (e.g., 4500.75)
+   - `confidence` (string): Model confidence level ("low", "medium", "high")
+   - `modelVersion` (string): Version of the rice prediction model used (e.g., "v2.1")
+   - `processingTime` (number): Time taken for model processing in seconds
+   - `analysis` (string): JSON string containing detailed model analysis (e.g., {"rice_count": 1250, "health_score": 85.5, "variety": "Basmati", "pest_detection": false})
+   - `recommendations` (string, optional): JSON string with farming recommendations based on analysis
+   - `thumbnailUrl` (string, optional): URL to media thumbnail
+
+### Step 3.3: Set Up Indexes
+Firestore automatically creates indexes for simple queries. For complex queries, you may need composite indexes:
+
+1. Go to "Indexes" tab in Firestore
+2. Create composite indexes for:
+   - Collection: `video_uploads`, Fields: `userId` (Asc), `uploadedAt` (Desc)
+   - Collection: `image_uploads`, Fields: `userId` (Asc), `uploadedAt` (Desc)
+   - Collection: `reports`, Fields: `userId` (Asc), `createdAt` (Desc)
+
+## 4. Configure Security Rules
+
+### Step 4.1: Firestore Security Rules
+1. In Firebase Console, go to "Firestore Database" > "Rules"
+2. Replace the default rules with the following:
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidUser() {
+      return isAuthenticated() &&
+             request.auth.token.email_verified == true;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Allow read/write for authenticated users to their own data
+      allow read, write: if isOwner(userId);
+
+      // Allow create for new users during signup
+      allow create: if isAuthenticated() &&
+                       request.auth.uid == userId &&
+                       request.resource.data.keys().hasAll(['email', 'name', 'createdAt']);
+
+      // Allow read for admins (if you implement admin roles)
+      // allow read: if isAdmin();
+    }
+
+    // Video uploads collection
+    match /video_uploads/{videoId} {
+      // Allow read/write for video owner
+      allow read, write: if isOwner(resource.data.userId);
+
+      // Allow create with proper validation
+      allow create: if isValidUser() &&
+                       request.auth.uid == request.resource.data.userId &&
+                       request.resource.data.keys().hasAll(['userId', 'videoUrl', 'uploadedAt', 'status']);
+
+      // Validate data types and constraints
+      allow write: if isOwner(resource.data.userId) &&
+                      request.resource.data.userId is string &&
+                      request.resource.data.videoUrl is string &&
+                      request.resource.data.status in ['processing', 'completed', 'failed'];
+    }
+
+    // Image uploads collection
+    match /image_uploads/{imageId} {
+      // Allow read/write for image owner
+      allow read, write: if isOwner(resource.data.userId);
+
+      // Allow create with proper validation
+      allow create: if isValidUser() &&
+                       request.auth.uid == request.resource.data.userId &&
+                       request.resource.data.keys().hasAll(['userId', 'imageUrl', 'uploadedAt', 'status']);
+
+      // Validate data types and constraints
+      allow write: if isOwner(resource.data.userId) &&
+                      request.resource.data.userId is string &&
+                      request.resource.data.imageUrl is string &&
+                      request.resource.data.status in ['processing', 'completed', 'failed'];
+    }
+
+    // Reports collection
+    match /reports/{reportId} {
+      // Allow read/write for report owner
+      allow read, write: if isOwner(resource.data.userId);
+
+      // Allow create with proper validation
+      allow create: if isValidUser() &&
+                       request.auth.uid == request.resource.data.userId &&
+                       request.resource.data.keys().hasAll(['userId', 'mediaId', 'mediaType', 'createdAt', 'predictedYield', 'confidence', 'modelVersion', 'processingTime', 'analysis']);
+
+      // Validate data types and constraints
+      allow write: if isOwner(resource.data.userId) &&
+                      request.resource.data.predictedYield is number &&
+                      request.resource.data.confidence in ['low', 'medium', 'high'] &&
+                      request.resource.data.mediaType in ['video', 'image'] &&
+                      request.resource.data.processingTime is number;
+    }
+  }
+}
+```
+
+### Step 4.2: Authentication Security Rules
+1. Go to "Authentication" > "Settings" > "User actions"
+2. Configure:
+   - Email enumeration protection: Enabled
+   - Account linking: Allow
+   - Password reset: Enabled
+   - Email verification: Required for new signups
+
+## 5. Set Up Firebase Storage (Optional)
+
+If you need to store video/image files in Firebase Storage:
+
+### Step 5.1: Enable Storage
+1. In Firebase Console, click "Storage" in the left sidebar
+2. Click "Get started"
+3. Choose "Start in test mode" (configure rules later)
+4. Click "Done"
+
+### Step 5.2: Storage Security Rules
+1. Go to "Storage" > "Rules"
+2. Replace with:
+
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Videos folder
+    match /videos/{userId}/{allPaths=**} {
+      allow read, write: if isOwner(userId);
+      allow create: if isAuthenticated() &&
+                       request.auth.uid == userId &&
+                       request.resource.size < 100 * 1024 * 1024 && // 100MB limit
+                       request.resource.contentType.matches('video/.*');
+    }
+
+    // Images folder
+    match /images/{userId}/{allPaths=**} {
+      allow read, write: if isOwner(userId);
+      allow create: if isAuthenticated() &&
+                       request.auth.uid == userId &&
+                       request.resource.size < 10 * 1024 * 1024 && // 10MB limit
+                       request.resource.contentType.matches('image/.*');
+    }
+
+    // Thumbnails folder
+    match /thumbnails/{userId}/{allPaths=**} {
+      allow read, write: if isOwner(userId);
+      allow create: if isAuthenticated() &&
+                       request.auth.uid == userId &&
+                       request.resource.size < 1 * 1024 * 1024 && // 1MB limit
+                       request.resource.contentType.matches('image/.*');
+    }
+  }
+}
+```
+
+## 6. Configure Flutter App
+
+### Step 6.1: Add Dependencies
+Update your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.16.0
+  cloud_firestore: ^4.15.5
+  firebase_storage: ^11.6.6  # Optional, for file storage
+  provider: ^6.1.1  # For state management
+```
+
+Run:
+```bash
+flutter pub get
+```
+
+### Step 6.2: Android Configuration
+1. Download `google-services.json` from Firebase Console
+2. Place it in `android/app/google-services.json`
+3. Update `android/build.gradle`:
+
+```gradle
+buildscript {
+  dependencies {
+    classpath 'com.google.gms:google-services:4.4.0'
+  }
+}
+```
+
+4. Update `android/app/build.gradle`:
+
+```gradle
+apply plugin: 'com.google.gms.google-services'
+
+android {
+  defaultConfig {
+    multiDexEnabled true
+  }
+}
+```
+
+### Step 6.3: iOS Configuration
+1. Download `GoogleService-Info.plist` from Firebase Console
+2. Add it to `ios/Runner/GoogleService-Info.plist`
+3. Update `ios/Podfile` if needed
+
+### Step 6.4: Initialize Firebase
+Update `lib/main.dart`:
+
+```dart
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'routes/app_router.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const MyApp());
+}
+```
+
+## 7. Implement Firestore Service
+
+Create `lib/services/firestore_service.dart`:
+
+```dart
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/user_model.dart';
+import '../models/video_model.dart';
+import '../models/image_model.dart';
+import '../models/report_model.dart';
+
+class FirestoreService {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Collection references
+  CollectionReference get _users => _firestore.collection('users');
+  CollectionReference get _videoUploads => _firestore.collection('video_uploads');
+  CollectionReference get _imageUploads => _firestore.collection('image_uploads');
+  CollectionReference get _reports => _firestore.collection('reports');
+
+  // User operations
+  Future<void> createUser(User user) async {
+    try {
+      await _users.doc(user.id).set(user.toJson());
+    } catch (e) {
+      throw Exception('Failed to create user: $e');
+    }
+  }
+
+  Future<User?> getUser(String userId) async {
+    try {
+      DocumentSnapshot doc = await _users.doc(userId).get();
+      if (doc.exists) {
+        return User.fromJson(doc.data() as Map<String, dynamic>);
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to get user: $e');
+    }
+  }
+
+  Future<void> updateUser(String userId, Map<String, dynamic> data) async {
+    try {
+      await _users.doc(userId).update(data);
+    } catch (e) {
+      throw Exception('Failed to update user: $e');
+    }
+  }
+
+  // Video operations
+  Future<void> createVideoUpload(VideoUpload video) async {
+    try {
+      await _videoUploads.doc(video.id).set(video.toJson());
+    } catch (e) {
+      throw Exception('Failed to create video upload: $e');
+    }
+  }
+
+  Future<List<VideoUpload>> getUserVideoUploads(String userId) async {
+    try {
+      QuerySnapshot query = await _videoUploads
+          .where('userId', isEqualTo: userId)
+          .orderBy('uploadedAt', descending: true)
+          .get();
+
+      return query.docs
+          .map((doc) => VideoUpload.fromJson(doc.data() as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to get video uploads: $e');
+    }
+  }
+
+  Future<void> updateVideoUpload(String videoId, Map<String, dynamic> data) async {
+    try {
+      await _videoUploads.doc(videoId).update(data);
+    } catch (e) {
+      throw Exception('Failed to update video upload: $e');
+    }
+  }
+
+  // Image operations
+  Future<void> createImageUpload(ImageUpload image) async {
+    try {
+      await _imageUploads.doc(image.id).set(image.toJson());
+    } catch (e) {
+      throw Exception('Failed to create image upload: $e');
+    }
+  }
+
+  Future<List<ImageUpload>> getUserImageUploads(String userId) async {
+    try {
+      QuerySnapshot query = await _imageUploads
+          .where('userId', isEqualTo: userId)
+          .orderBy('uploadedAt', descending: true)
+          .get();
+
+      return query.docs
+          .map((doc) => ImageUpload.fromJson(doc.data() as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to get image uploads: $e');
+    }
+  }
+
+  Future<void> updateImageUpload(String imageId, Map<String, dynamic> data) async {
+    try {
+      await _imageUploads.doc(imageId).update(data);
+    } catch (e) {
+      throw Exception('Failed to update image upload: $e');
+    }
+  }
+
+  // Report operations
+  Future<void> createReport(Report report) async {
+    try {
+      await _reports.doc(report.id).set(report.toJson());
+    } catch (e) {
+      throw Exception('Failed to create report: $e');
+    }
+  }
+
+  Future<List<Report>> getUserReports(String userId) async {
+    try {
+      QuerySnapshot query = await _reports
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      return query.docs
+          .map((doc) => Report.fromJson(doc.data() as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to get reports: $e');
+    }
+  }
+
+  Future<Report?> getReport(String reportId) async {
+    try {
+      DocumentSnapshot doc = await _reports.doc(reportId).get();
+      if (doc.exists) {
+        return Report.fromJson(doc.data() as Map<String, dynamic>);
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to get report: $e');
+    }
+  }
+
+  // Real-time listeners
+  Stream<List<VideoUpload>> getUserVideoUploadsStream(String userId) {
+    return _videoUploads
+        .where('userId', isEqualTo: userId)
+        .orderBy('uploadedAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => VideoUpload.fromJson(doc.data() as Map<String, dynamic>))
+            .toList());
+  }
+
+  Stream<List<Report>> getUserReportsStream(String userId) {
+    return _reports
+        .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => Report.fromJson(doc.data() as Map<String, dynamic>))
+            .toList());
+  }
+}
+```
+
+## 8. Update Existing Services
+
+### Step 8.1: Update AuthService
+Modify `lib/services/auth_service.dart`:
+
+```dart
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/user_model.dart';
+import 'firestore_service.dart';
+
+class AuthService {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirestoreService _firestore = FirestoreService();
+
+  // Get current user stream
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  // Sign up with email and password
+  Future<UserCredential> signUp(String email, String password, String name, String? phone) async {
+    try {
+      UserCredential result = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Create user document in Firestore
+      UserModel user = UserModel(
+        id: result.user!.uid,
+        email: email,
+        name: name,
+        phone: phone,
+        createdAt: DateTime.now(),
+      );
+
+      await _firestore.createUser(user);
+
+      return result;
+    } catch (e) {
+      throw Exception('Sign up failed: $e');
+    }
+  }
+
+  // Sign in with email and password
+  Future<UserCredential> signIn(String email, String password) async {
+    try {
+      return await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } catch (e) {
+      throw Exception('Sign in failed: $e');
+    }
+  }
+
+  // Sign out
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
+
+  // Get current user data from Firestore
+  Future<UserModel?> getCurrentUserData() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      return await _firestore.getUser(user.uid);
+    }
+    return null;
+  }
+
+  // Reset password
+  Future<void> resetPassword(String email) async {
+    await _auth.sendPasswordResetEmail(email: email);
+  }
+
+  // Update user profile
+  Future<void> updateProfile(String name, String? phone) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      await _firestore.updateUser(user.uid, {
+        'name': name,
+        if (phone != null) 'phone': phone,
+      });
+    }
+  }
+}
+```
+
+### Step 8.2: Update VideoService
+Modify `lib/services/video_service.dart`:
+
+```dart
+import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
+import '../models/video_model.dart';
+import '../models/report_model.dart';
+import 'firestore_service.dart';
+
+class VideoService {
+  final FirestoreService _firestore = FirestoreService();
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+
+  Future<VideoUpload?> uploadVideo(
+    File videoFile,
+    String userId,
+    Function(double) onProgress,
+  ) async {
+    try {
+      String fileName = '${DateTime.now().millisecondsSinceEpoch}.mp4';
+      Reference ref = _storage.ref().child('videos/$userId/$fileName');
+
+      UploadTask uploadTask = ref.putFile(videoFile);
+
+      uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+        double progress = snapshot.bytesTransferred / snapshot.totalBytes;
+        onProgress(progress);
+      });
+
+      TaskSnapshot snapshot = await uploadTask;
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+
+      // Create video upload record
+      VideoUpload upload = VideoUpload(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        userId: userId,
+        videoUrl: downloadUrl,
+        uploadedAt: DateTime.now(),
+        status: 'processing',
+      );
+
+      await _firestore.createVideoUpload(upload);
+
+      // Simulate processing (replace with actual ML processing)
+      _simulateProcessing(upload.id);
+
+      return upload;
+    } catch (e) {
+      throw Exception('Video upload failed: $e');
+    }
+  }
+
+  Future<List<VideoUpload>> getUserUploads(String userId) async {
+    return await _firestore.getUserVideoUploads(userId);
+  }
+
+  Future<List<Report>> getUserReports(String userId) async {
+    return await _firestore.getUserReports(userId);
+  }
+
+  Stream<List<VideoUpload>> getUserUploadsStream(String userId) {
+    return _firestore.getUserVideoUploadsStream(userId);
+  }
+
+  Stream<List<Report>> getUserReportsStream(String userId) {
+    return _firestore.getUserReportsStream(userId);
+  }
+
+  Future<void> _simulateProcessing(String videoId) async {
+    // Simulate processing delay
+    await Future.delayed(const Duration(seconds: 5));
+
+    // Update status to completed with mock data
+    await _firestore.updateVideoUpload(videoId, {
+      'status': 'completed',
+      'predictedYield': 1500.0 + (DateTime.now().millisecond % 500),
+    });
+
+    // Create a mock report
+    Report report = Report(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      userId: '', // Will be set by caller
+      videoId: videoId,
+      createdAt: DateTime.now(),
+      predictedYield: 1500.0,
+      confidence: 'high',
+      analysis: '{"details": "Mock analysis data"}',
+    );
+
+    await _firestore.createReport(report);
+  }
+}
+```
+
+## 9. Testing and Deployment
+
+### Step 9.1: Testing
+1. Test authentication flows (signup, login, logout)
+2. Test data operations (create, read, update)
+3. Test security rules with different user accounts
+4. Test offline functionality (if implemented)
+
+### Step 9.2: Deployment Checklist
+- [ ] Firebase project created and configured
+- [ ] Authentication enabled and configured
+- [ ] Firestore database created with proper collections
+- [ ] Security rules deployed and tested
+- [ ] Flutter app configured with Firebase
+- [ ] All services updated to use Firebase
+- [ ] Error handling implemented
+- [ ] Testing completed
+
+### Step 9.3: Production Considerations
+1. **Security Rules**: Switch from test mode to production rules
+2. **Billing**: Set up billing if needed for heavy usage
+3. **Monitoring**: Enable Firebase monitoring and alerts
+4. **Backup**: Configure automatic backups if using Firestore
+5. **Scaling**: Monitor usage and scale as needed
+
+## 10. Troubleshooting
+
+### Common Issues
+
+#### Authentication Issues
+- **Problem**: Users can't sign up/sign in
+- **Solution**: Check Firebase Authentication settings, ensure correct configuration files
+
+#### Firestore Permission Denied
+- **Problem**: Operations fail with permission denied
+- **Solution**: Review security rules, ensure user is authenticated
+
+#### Data Not Saving
+- **Problem**: Data not appearing in Firestore
+- **Solution**: Check network connection, verify collection names, check error logs
+
+#### Flutter Build Issues
+- **Problem**: App won't build with Firebase
+- **Solution**: Ensure all dependencies are correct versions, check platform-specific configuration
+
+### Useful Commands
+```bash
+# Check Firebase CLI version
+firebase --version
+
+# Login to Firebase
+firebase login
+
+# Initialize Firebase in project
+firebase init
+
+# Deploy security rules
+firebase deploy --only firestore:rules
+
+# View Firebase logs
+firebase functions:log
+```
+
+### Support Resources
+- [Firebase Documentation](https://firebase.google.com/docs)
+- [FlutterFire Documentation](https://firebase.google.com/docs/flutter/setup)
+- [Firebase Console](https://console.firebase.google.com/)
+- [Stack Overflow](https://stackoverflow.com/questions/tagged/firebase)
+
+---
+
+This comprehensive guide covers all aspects of setting up Firebase for your Rice Yield Predictor app. Follow each step carefully, and test thoroughly at each stage. If you encounter issues, refer to the troubleshooting section or Firebase documentation.
