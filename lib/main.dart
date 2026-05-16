@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'config/supabase_config.dart';
-import '/providers/app_providers.dart';
-import '/utils/theme.dart';
+import 'core/config/supabase_config.dart';
+import 'package:rice_yield_app/core/providers/app_providers.dart';
+import '/core/theme/theme.dart';
 import 'package:flutter/services.dart'; 
 
 

@@ -46,6 +46,7 @@ dependencies:
 
   # Charts for reports
   fl_chart: ^1.1.1
+  flutter_tts: ^3.8.5
 
   # Date formatting
   intl: ^0.20.2
@@ -56,8 +57,21 @@ dependencies:
   printing: ^5.14.2
   iconsax: ^0.0.8
   video_thumbnail: ^0.5.6
+  riverpod_annotation: ^3.0.0-dev.3
+  http_parser: ^4.1.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  build_runner: ^2.4.13
+  riverpod_generator: ^3.0.0-dev.11
+  custom_lint: ^0.5.11
+  riverpod_lint: ^3.0.0-dev.4
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+

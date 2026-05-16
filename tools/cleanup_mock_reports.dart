@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
+
 
 import 'package:http/http.dart' as http;
 
@@ -15,7 +17,7 @@ Future<void> main() async {
   final targetUserId = Platform.environment['TARGET_USER_ID'];
 
   if (supabaseUrl == null || supabaseKey == null || targetUserId == null) {
-    print('Please set SUPABASE_URL, SUPABASE_KEY and TARGET_USER_ID env variables.');
+    debugPrint('Please set SUPABASE_URL, SUPABASE_KEY and TARGET_USER_ID env variables.');
     exit(1);
   }
 
@@ -30,7 +32,7 @@ Future<void> main() async {
     });
 
     if (resp.statusCode != 200) {
-      print('Failed to fetch reports: ${resp.statusCode} ${resp.body}');
+      debugPrint('Failed to fetch reports: ${resp.statusCode} ${resp.body}');
       exit(2);
     }
 
@@ -56,7 +58,7 @@ Future<void> main() async {
       if (isMock) idsToDelete.add(id.toString());
     }
 
-    print('Found ${idsToDelete.length} mock report(s) to delete.');
+  
     if (idsToDelete.isEmpty) return;
 
     for (final id in idsToDelete) {
@@ -67,13 +69,13 @@ Future<void> main() async {
         'Prefer': 'return=minimal',
       });
       if (dresp.statusCode == 204) {
-        print('Deleted $id');
+        debugPrint('Deleted $id');
       } else {
-        print('Failed to delete $id: ${dresp.statusCode} ${dresp.body}');
+        debugPrint('Failed to delete $id: ${dresp.statusCode} ${dresp.body}');
       }
     }
 
-    print('Done.');
+
   } finally {
     client.close();
   }

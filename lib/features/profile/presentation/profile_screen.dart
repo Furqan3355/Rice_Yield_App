@@ -76,13 +76,57 @@ class _ProfileHeader extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Text(
-            authState.userName ?? 'User Name',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  authState.userName ?? 'User Name',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+                tooltip: 'Edit Name',
+                onPressed: () async {
+                  final controller = TextEditingController(text: authState.userName ?? '');
+                  final newName = await showDialog<String>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text('Edit Name'),
+                        content: TextField(
+                          controller: controller,
+                          decoration: const InputDecoration(labelText: 'Name'),
+                          autofocus: true,
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('Cancel'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+                            child: const Text('Save'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                  if (newName != null && newName.isNotEmpty && newName != authState.userName) {
+                    // Call update method
+                    final notifier = ref.read(authNotifierProvider.notifier);
+                    await notifier.updateUserName(newName);
+                  }
+                },
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(
@@ -201,7 +245,11 @@ class _SettingsList extends StatelessWidget {
               _SettingsTile(
                 icon: Iconsax.notification,
                 title: 'Notifications',
-                onTap: () {},
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Notifications coming soon!')),
+                  );
+                },
               ),
               Divider(
                 height: 1,
@@ -212,7 +260,11 @@ class _SettingsList extends StatelessWidget {
               _SettingsTile(
                 icon: Iconsax.shield_tick,
                 title: 'Privacy',
-                onTap: () {},
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Privacy coming soon!')),
+                  );
+                },
               ),
               Divider(
                 height: 1,
@@ -223,7 +275,11 @@ class _SettingsList extends StatelessWidget {
               _SettingsTile(
                 icon: Iconsax.message_question,
                 title: 'Help & Support',
-                onTap: () {},
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Help & Support coming soon!')),
+                  );
+                },
               ),
             ],
           ),
