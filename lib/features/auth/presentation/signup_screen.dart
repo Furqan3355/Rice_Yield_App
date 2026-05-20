@@ -8,6 +8,7 @@ import '/core/widgets/custom_button.dart';
 import '/core/widgets/custom_text_field.dart';
 import '/core/routes/route_names.dart';
 import 'package:rice_yield_app/features/auth/presentation/widgets/auth_form.dart';
+import 'package:rice_yield_app/core/widgets/app_logo.dart';
 import 'dart:async';
 
 class SignupScreen extends ConsumerStatefulWidget {
@@ -80,7 +81,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Account created successfully!'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppTheme.successColor,
         ),
       );
       context.go(RouteNames.getHomePath());
@@ -137,6 +138,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const Center(child: AppLogo(width: 100, height: 100)),
                 const SizedBox(height: 16),
                 Text(
                   'Get Started',

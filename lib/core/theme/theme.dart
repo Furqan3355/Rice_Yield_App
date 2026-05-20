@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:rice_yield_app/core/utils/app_colors.dart';
 
 class AppTheme {
-  // Colors
-  static const Color primaryColor = Color(0xFF2E7D32);
-  static const Color secondaryColor = Color(0xFF388E3C);
-  static const Color accentColor = Color(0xFF4CAF50);
-  static const Color backgroundColor = Color(0xFFF5F5F5);
-  static const Color textColor = Color.fromARGB(255, 17, 212, 17);
-  static const Color errorColor = Color(0xFFD32F2F);
-  static const Color successColor = Color(0xFF388E3C);
-  static const Color warningColor = Color(0xFFF57C00);
+  AppTheme._();
 
-  // Text Styles
+  static const Color primaryColor = AppColors.primary;
+  static const Color secondaryColor = AppColors.secondary;
+  static const Color backgroundColor = AppColors.background;
+  static const Color textColor = AppColors.textPrimary;
+  static const Color errorColor = AppColors.error;
+  static const Color successColor = AppColors.success;
+  static const Color warningColor = AppColors.warning;
+
   static TextStyle headlineLarge = GoogleFonts.poppins(
     fontSize: 32,
     fontWeight: FontWeight.w700,
@@ -34,7 +34,7 @@ class AppTheme {
   static TextStyle bodyMedium = GoogleFonts.inter(
     fontSize: 14,
     fontWeight: FontWeight.w400,
-    color: textColor.withValues(alpha:255*0.8),
+    color: textColor.withValues(alpha: 0.75),
   );
 
   static TextStyle buttonText = GoogleFonts.poppins(
@@ -43,16 +43,26 @@ class AppTheme {
     color: Colors.white,
   );
 
-  // Light Theme
   static ThemeData lightTheme = ThemeData(
+    useMaterial3: true,
+    scaffoldBackgroundColor: backgroundColor,
     colorScheme: ColorScheme.light(
       primary: primaryColor,
+      onPrimary: Colors.white,
       secondary: secondaryColor,
+      onSecondary: Colors.white,
       surface: backgroundColor,
+      onSurface: textColor,
       error: errorColor,
     ),
-    useMaterial3: true,
     fontFamily: GoogleFonts.inter().fontFamily,
+    appBarTheme: AppBarTheme(
+      backgroundColor: backgroundColor,
+      foregroundColor: textColor,
+      elevation: 0,
+      centerTitle: true,
+      titleTextStyle: headlineMedium.copyWith(fontSize: 18),
+    ),
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -64,7 +74,7 @@ class AppTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: primaryColor, width: 2),
+        borderSide: const BorderSide(color: primaryColor, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -88,7 +98,7 @@ class AppTheme {
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: primaryColor,
+        foregroundColor: secondaryColor,
         textStyle: bodyMedium.copyWith(fontWeight: FontWeight.w500),
       ),
     ),
@@ -99,6 +109,13 @@ class AppTheme {
         side: BorderSide(color: Colors.grey.shade100, width: 1),
       ),
       color: Colors.white,
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: secondaryColor,
+    ),
+    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      backgroundColor: secondaryColor,
+      foregroundColor: Colors.white,
     ),
   );
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:rice_yield_app/core/utils/app_colors.dart';
 
 class HomeWrapper extends StatelessWidget {
   // ✅ Ye line add ki hai error khatam karne ke liye
@@ -27,7 +28,8 @@ class HomeWrapper extends StatelessWidget {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: selectedIndex,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.green,
+        selectedItemColor: AppColors.primary,
+        backgroundColor: AppColors.background,
         unselectedItemColor: Colors.grey,
         onTap: (index) {
           switch (index) {

@@ -1,6 +1,7 @@
 class AuthState {
   final bool isLoading;
   final bool isAuthenticated;
+  final bool isInitialized;
   final String? error;
   final String? userEmail;
   final String? userName;
@@ -9,6 +10,7 @@ class AuthState {
   const AuthState({
     this.isLoading = false,
     this.isAuthenticated = false,
+    this.isInitialized = false,
     this.error,
     this.userEmail,
     this.userName,
@@ -18,6 +20,7 @@ class AuthState {
   AuthState copyWith({
     bool? isLoading,
     bool? isAuthenticated,
+    bool? isInitialized,
     String? error,
     String? userEmail,
     String? userName,
@@ -27,6 +30,7 @@ class AuthState {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+      isInitialized: isInitialized ?? this.isInitialized,
       error: clearError ? null : error ?? this.error,
       userEmail: userEmail ?? this.userEmail,
       userName: userName ?? this.userName,
@@ -38,6 +42,7 @@ class AuthState {
     return const AuthState(
       isLoading: false,
       isAuthenticated: false,
+      isInitialized: false,
     );
   }
 

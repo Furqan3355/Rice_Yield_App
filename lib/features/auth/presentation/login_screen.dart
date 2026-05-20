@@ -8,6 +8,7 @@ import '/core/routes/route_names.dart';
 import 'package:rice_yield_app/features/auth/presentation/widgets/auth_form.dart';
 import 'package:rice_yield_app/features/auth/presentation/widgets/password_field.dart';
 import '/core/widgets/custom_text_field.dart';
+import 'package:rice_yield_app/core/widgets/app_logo.dart';
 import 'dart:async';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -93,8 +94,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 40),
-                // Header
+                const Center(child: AppLogo(width: 120, height: 120)),
+                const SizedBox(height: 24),
                 Text(
                   'Welcome Back',
                   style: AppTheme.headlineLarge.copyWith(

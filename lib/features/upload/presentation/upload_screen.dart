@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
+// import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:http/http.dart' as http;
 import 'package:rice_yield_app/core/providers/app_providers.dart';
 import '/core/config/app_config.dart';
@@ -265,12 +265,21 @@ Future<void> _markAsFailed(String id) async {
           decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(16)),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: FutureBuilder<File?>(
-              future: _generateThumbnail(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) return Image.file(snapshot.data!, fit: BoxFit.cover);
-                return const Center(child: Icon(Iconsax.video));
-              },
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Iconsax.video, size: 48, color: Colors.grey.shade600),
+                  const SizedBox(height: 8),
+                  Text(
+                    _selectedVideo?.name ?? 'Video selected',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -309,9 +318,13 @@ Future<void> _markAsFailed(String id) async {
     );
   }
 
-  Future<File?> _generateThumbnail() async {
-    if (_selectedVideo == null) return null;
-    final path = await VideoThumbnail.thumbnailFile(video: _selectedVideo!.path, imageFormat: ImageFormat.JPEG, quality: 50);
-    return path != null ? File(path) : null;
-  }
+  // Future<File?> _generateThumbnail() async {
+  //   if (_selectedVideo == null) return null;
+  //   final path = await VideoThumbnail.thumbnailFile(
+  //     video: _selectedVideo!.path,
+  //     imageFormat: ImageFormat.JPEG,
+  //     quality: 50,
+  //   );
+  //   return path != null ? File(path) : null;
+  // }
 }

@@ -39,6 +39,9 @@ final reportsProvider = StreamProvider<List<Report>>((ref) {
 });
 
 // ============ ROUTER ============
+/// Set from [main] after reading local [AuthStorage.isLoggedIn].
+final initialRouteProvider = Provider<String>((ref) => '/login');
+
 final routerProvider = Provider<GoRouter>((ref) => AppRouter(ref: ref).router);
 
 // ============ UTILITY PROVIDERS (Fixing Undefined Errors) ============
