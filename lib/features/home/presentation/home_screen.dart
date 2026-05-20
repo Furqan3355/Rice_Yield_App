@@ -6,7 +6,7 @@ import 'package:rice_yield_app/core/utils/app_colors.dart';
 import 'package:rice_yield_app/features/reports/domain/report_model.dart';
 import '/core/theme/theme.dart';
 
-import 'package:rice_yield_app/features/home/presentation/widgets/stat_card.dart';
+import 'package:rice_yield_app/features/home/presentation/widgets/home_stats_grid.dart';
 import 'package:rice_yield_app/features/home/presentation/widgets/quick_action_card.dart';
 import 'package:rice_yield_app/features/home/presentation/widgets/report_list_tile.dart';
 import 'package:rice_yield_app/features/home/presentation/widgets/loading_reports.dart';
@@ -88,38 +88,15 @@ class HomeScreen extends ConsumerWidget {
 
                     const SizedBox(height: 28),
 
-                    GridView.count(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 14,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      childAspectRatio: 1.15,
-                      children: [
-                        StatCard(
-                          icon: Iconsax.document_text_1,
-                          value: reports.length.toString(),
-                          label: 'Total Reports',
-                        ),
-                        StatCard(
-                          icon: Iconsax.calendar_tick,
-                          value: todayReports.length.toString(),
-                          label: 'Today',
-                        ),
-                        StatCard(
-                          icon: Iconsax.send_square,
-                          value: reports
-                              .fold<int>(0, (sum, r) => sum + r.totalPanicles)
-                              .toString(),
-                          label: 'Total Panicles',
-                        ),
-                        StatCard(
-                          icon: Iconsax.weight_1,
-                          value:
-                              '${reports.fold<double>(0, (sum, r) => sum + r.totalWeight).toStringAsFixed(1)} kg',
-                          label: 'Total Weight',
-                        ),
-                      ],
+                    HomeStatsGrid(
+                      totalReports: reports.length,
+                      todayCount: todayReports.length,
+                      totalPanicles: reports.fold<int>(
+                        0,
+                        (sum, r) => sum + r.totalPanicles,
+                      ),
+                      totalWeight:
+                          '${reports.fold<double>(0, (sum, r) => sum + r.totalWeight).toStringAsFixed(1)} kg',
                     ),
 
                     const SizedBox(height: 28),

@@ -18,9 +18,11 @@ class EmptyReports extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade200, strokeAlign: BorderSide.strokeAlignOutside),
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 30, 16, 30),
             decoration: BoxDecoration(
               color: Colors.grey.withValues(alpha: 0.1),
               shape: BoxShape.circle,
@@ -31,7 +33,7 @@ class EmptyReports extends StatelessWidget {
               color: AppColors.primaryColor,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 15),
           const Text(
             'No Reports Yet',
             style: TextStyle(
@@ -49,21 +51,21 @@ class EmptyReports extends StatelessWidget {
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: onUpload,
-            icon: const Icon(Iconsax.video_add, size: 20),
-            label: const Text('New Upload'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryColor,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
+          // const SizedBox(height: 24),
+          // ElevatedButton.icon(
+          //   onPressed: onUpload,
+          //   icon: const Icon(Iconsax.video_add, size: 20),
+          //   label: const Text('New Upload'),
+          //   style: ElevatedButton.styleFrom(
+          //     backgroundColor: AppColors.primaryColor,
+          //     foregroundColor: Colors.white,
+          //     elevation: 0,
+          //     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          //     shape: RoundedRectangleBorder(
+          //       borderRadius: BorderRadius.circular(12),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );

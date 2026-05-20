@@ -57,7 +57,7 @@ class QuickActionCard extends StatelessWidget {
                         label,
                         style: AppTheme.bodyLarge.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: AppColors.secondary,
+                          color: AppColors.primary,
                         ),
                       ),
                       const SizedBox(height: 4),

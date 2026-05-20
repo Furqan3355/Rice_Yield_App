@@ -55,7 +55,7 @@ class ReportListTile extends StatelessWidget {
                         report.reportId ?? 'Report ${report.shortDate}',
                         style: AppTheme.bodyLarge.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: AppColors.secondary,
+                          color: AppColors.primary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -132,7 +132,7 @@ class ReportListTile extends StatelessWidget {
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'completed':
-        return AppColors.secondary;
+        return AppColors.primary;
       case 'processing':
         return AppColors.warning;
       case 'failed':
