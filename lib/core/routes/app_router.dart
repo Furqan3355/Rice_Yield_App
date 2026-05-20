@@ -9,6 +9,8 @@ import '../../features/home/presentation/home_screen.dart';
 import 'package:rice_yield_app/features/upload/presentation/upload_screen.dart';
 import 'package:rice_yield_app/features/reports/presentation/reports_history_screen.dart';
 import 'package:rice_yield_app/features/profile/presentation/profile_screen.dart';
+import 'package:rice_yield_app/features/profile/presentation/privacy_policy_screen.dart';
+import 'package:rice_yield_app/features/profile/presentation/help_support_screen.dart';
 import 'dart:async';
 
 class AppRouter {
@@ -48,6 +50,14 @@ class AppRouter {
                 builder: (c, s) => const ReportsHistoryScreen(),
               ),
               GoRoute(path: '/profile', builder: (c, s) => const ProfileScreen()),
+              GoRoute(
+                path: '/privacy',
+                builder: (c, s) => const PrivacyPolicyScreen(),
+              ),
+              GoRoute(
+                path: '/help',
+                builder: (c, s) => const HelpSupportScreen(),
+              ),
             ],
           ),
         ],
