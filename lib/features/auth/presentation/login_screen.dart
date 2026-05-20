@@ -1,15 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_avif/flutter_avif.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:rice_yield_app/core/constants/app_assets.dart';
 import 'package:rice_yield_app/core/providers/app_providers.dart';
-import '/core/theme/theme.dart';
-import '/core/utils/validators.dart'; // Validators import
-import '/core/routes/route_names.dart';
+import 'package:rice_yield_app/core/utils/app_colors.dart';
+import 'package:rice_yield_app/features/auth/domain/auth_state.dart';
 import 'package:rice_yield_app/features/auth/presentation/widgets/auth_form.dart';
 import 'package:rice_yield_app/features/auth/presentation/widgets/password_field.dart';
+import '/core/routes/route_names.dart';
+import '/core/theme/theme.dart';
+import '/core/utils/validators.dart';
 import '/core/widgets/custom_text_field.dart';
-import 'package:rice_yield_app/core/widgets/app_logo.dart';
-import 'dart:async';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -29,7 +34,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // Clear any previous errors when entering login screen
     Future.microtask(() {
       if (mounted) ref.read(authNotifierProvider.notifier).clearError();
     });
@@ -44,6 +48,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
 
     final success = await ref.read(authNotifierProvider.notifier).login(
@@ -62,7 +67,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Listen for auth state changes to show/hide server error UI
     ref.listen(authNotifierProvider, (prev, next) {
       final prevError = prev?.error;
       final nextError = next.error;
@@ -79,158 +83,352 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         }
       }
     });
-    
+
     final authState = ref.watch(authNotifierProvider);
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final imageHeight = screenHeight * 0.48;
+    final contentOverlap = screenHeight * 0.38;
 
     return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-      },
+      onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Center(child: AppLogo(width: 120, height: 120)),
-                const SizedBox(height: 24),
-                Text(
-                  'Welcome Back',
-                  style: AppTheme.headlineLarge.copyWith(
-                    color: AppTheme.primaryColor,
+        backgroundColor: Colors.white,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: imageHeight,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  AvifImage.asset(
+                    AppAssets.riceFieldImage,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: imageHeight,
                   ),
+                  Container(
+                    color: Colors.black.withValues(alpha: 0.15),
+                  ),
+                ],
+              ),
+            ),
+            SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: Column(
+                children: [
+                  SizedBox(height: contentOverlap),
+                  _LoginContentCard(
+                    authState: authState,
+                    showServerError: _showServerError,
+                    formKey: _formKey,
+                    emailController: _emailController,
+                    passwordController: _passwordController,
+                    obscurePassword: _obscurePassword,
+                    onTogglePassword: () {
+                      setState(() => _obscurePassword = !_obscurePassword);
+                    },
+                    onClearError: _clearError,
+                    onLogin: _handleLogin,
+                    onForgotPassword: () {
+                      context.push(RouteNames.getForgotPasswordPath());
+                    },
+                    onRegister: () {
+                      context.push(RouteNames.getSignupPath());
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LoginContentCard extends StatelessWidget {
+  const _LoginContentCard({
+    required this.authState,
+    required this.showServerError,
+    required this.formKey,
+    required this.emailController,
+    required this.passwordController,
+    required this.obscurePassword,
+    required this.onTogglePassword,
+    required this.onClearError,
+    required this.onLogin,
+    required this.onForgotPassword,
+    required this.onRegister,
+  });
+
+  final AuthState authState;
+  final bool showServerError;
+  final GlobalKey<FormState> formKey;
+  final TextEditingController emailController;
+  final TextEditingController passwordController;
+  final bool obscurePassword;
+  final VoidCallback onTogglePassword;
+  final VoidCallback onClearError;
+  final VoidCallback onLogin;
+  final VoidCallback onForgotPassword;
+  final VoidCallback onRegister;
+
+  @override
+  Widget build(BuildContext context) {
+    final fieldTheme = Theme.of(context).copyWith(
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: AppTheme.primaryColor.withValues(alpha: 0.4),
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: AppTheme.primaryColor.withValues(alpha: 0.4),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.error, width: 2),
+        ),
+        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+        prefixIconColor: AppTheme.primaryColor,
+      ),
+    );
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.white.withValues(alpha: 0.95),
+            blurRadius: 18,
+            spreadRadius: 2,
+            offset: const Offset(0, -10),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -6),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 28,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.65),
+                    Colors.white,
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Sign in to continue to Rice Yield Predictor',
-                  style: AppTheme.bodyMedium,
-                ),
-                const SizedBox(height: 40),
-
-                // Form with autovalidateMode
-                AuthForm(
-                  formKey: _formKey,
-                 // autovalidateMode: AutovalidateMode.onUserInteraction, //  Add this
-                  children: [
-                    // Email
-                    CustomTextField(
-                      controller: _emailController,
-                      labelText: 'Email Address',
-                      hintText: 'Enter your email',
-                      keyboardType: TextInputType.emailAddress,
-                      prefixIcon: const Icon(Icons.email_outlined),
-                      validator: Validators.validateEmail,
-                      onChanged: (_) => _clearError(),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Password
-                    PasswordField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      onToggleVisibility: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                      validator: Validators.validatePassword,
-                      onChanged: (_) => _clearError(),
-                    ),
-
-                    // Forgot Password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          context.push(RouteNames.getForgotPasswordPath());
-                        },
-                        child: Text(
-                          'Forgot Password?',
-                          style: AppTheme.bodyMedium.copyWith(
-                            color: AppTheme.primaryColor,
-                            fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+            child: Theme(
+              data: fieldTheme,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Welcome Back',
+                    style: AppTheme.headlineLarge.copyWith(fontSize: 28),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Sign in to continue to Rice Yield Predictor',
+                    style: AppTheme.bodyMedium.copyWith(color: AppColors.subtitle),
+                  ),
+                  const SizedBox(height: 20),
+                  _FieldLabel('Email address'),
+                  const SizedBox(height: 6),
+                  AuthForm(
+                    formKey: formKey,
+                    children: [
+                      CustomTextField(
+                        controller: emailController,
+                        labelText: '',
+                        hintText: 'example@email.com',
+                        keyboardType: TextInputType.emailAddress,
+                        prefixIcon: const Icon(Iconsax.sms, size: 20),
+                        validator: Validators.validateEmail,
+                        hideErrorOnEditing: false,
+                        onChanged: (_) => onClearError(),
+                      ),
+                      const SizedBox(height: 14),
+                      _FieldLabel('Password'),
+                      const SizedBox(height: 6),
+                      PasswordField(
+                        controller: passwordController,
+                        labelText: '',
+                        hintText: '********',
+                        obscureText: obscurePassword,
+                        onToggleVisibility: onTogglePassword,
+                        validator: Validators.validatePassword,
+                        hideErrorOnEditing: false,
+                        onChanged: (_) => onClearError(),
+                      ),
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: onForgotPassword,
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppTheme.primaryColor,
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                          ),
+                          child: Text(
+                            'Forgot password?',
+                            style: AppTheme.bodyMedium.copyWith(
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.primaryColor,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Error Message (server/auth errors persist briefly)
-                    if (authState.error != null && _showServerError)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppTheme.errorColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppTheme.errorColor.withOpacity(0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.error_outline, color: AppTheme.errorColor, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                authState.error!,
-                                style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor),
+                      const SizedBox(height: 12),
+                      if (authState.error != null && showServerError)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.errorColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: AppTheme.errorColor.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.error_outline,
+                                color: AppTheme.errorColor,
+                                size: 20,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  authState.error!,
+                                  style: AppTheme.bodyMedium.copyWith(
+                                    color: AppTheme.errorColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                  ],
-                ),
-
-                const SizedBox(height: 32),
-
-                // Login Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: authState.isLoading ? null : _handleLogin,
-                    child: authState.isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text('Sign In', style: AppTheme.buttonText),
+                    ],
                   ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Sign Up Link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Don't have an account? ",
-                      style: AppTheme.bodyMedium,
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        context.push(RouteNames.getSignupPath());
-                      },
-                      child: Text(
-                        'Sign Up',
-                        style: AppTheme.bodyMedium.copyWith(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.w600,
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: authState.isLoading ? null : onLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor:
+                            AppTheme.primaryColor.withValues(alpha: 0.5),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
+                      icon: authState.isLoading
+                          ? const SizedBox.shrink()
+                          : const Icon(Iconsax.user, size: 22),
+                      label: authState.isLoading
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text('Login', style: AppTheme.buttonText),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account? ",
+                        style: AppTheme.bodyMedium.copyWith(color: AppColors.subtitle),
+                      ),
+                      TextButton(
+                        onPressed: onRegister,
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppTheme.primaryColor,
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'Register',
+                          style: AppTheme.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.primaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: AppTheme.bodyMedium.copyWith(
+        fontWeight: FontWeight.w500,
+        color: AppTheme.primaryColor,
       ),
     );
   }

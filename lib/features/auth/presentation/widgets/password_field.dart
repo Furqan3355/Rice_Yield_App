@@ -38,6 +38,11 @@ class _PasswordFieldState extends State<PasswordField> {
     super.initState();
     _focusNode = widget.focusNode ?? FocusNode();
     _focusNode.addListener(_handleFocus);
+    widget.controller.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    if (mounted) setState(() {});
   }
 
   void _handleFocus() {
@@ -54,8 +59,13 @@ class _PasswordFieldState extends State<PasswordField> {
     }
   }
 
+  /// Obscure only when there is input — keeps hint visible when empty (like email).
+  bool get _shouldObscure =>
+      widget.obscureText && widget.controller.text.isNotEmpty;
+
   @override
   void dispose() {
+    widget.controller.removeListener(_onTextChanged);
     _focusNode.removeListener(_handleFocus);
     if (widget.focusNode == null) _focusNode.dispose();
     super.dispose();
@@ -68,9 +78,20 @@ class _PasswordFieldState extends State<PasswordField> {
 
   @override
   Widget build(BuildContext context) {
+    final inputTheme = Theme.of(context).inputDecorationTheme;
+    final borderRadius = BorderRadius.circular(12);
+
+    InputBorder borderOr(OutlineInputBorder? fromTheme, Color fallback) {
+      return fromTheme ??
+          OutlineInputBorder(
+            borderRadius: borderRadius,
+            borderSide: BorderSide(color: fallback),
+          );
+    }
+
     return TextFormField(
       controller: widget.controller,
-      obscureText: widget.obscureText,
+      obscureText: _shouldObscure,
       validator: widget.validator,
       onChanged: _handleChanged,
       focusNode: _focusNode,
@@ -78,23 +99,48 @@ class _PasswordFieldState extends State<PasswordField> {
           ? (_showError ? AutovalidateMode.always : AutovalidateMode.disabled)
           : AutovalidateMode.disabled,
       decoration: InputDecoration(
-        labelText: widget.labelText,
+        labelText:
+            (widget.labelText == null || widget.labelText!.isEmpty)
+                ? null
+                : widget.labelText,
         hintText: widget.hintText,
-        prefixIcon: const Icon(Icons.lock_outline),
+        prefixIcon: const Icon(Icons.lock_outline, size: 20),
         suffixIcon: IconButton(
           icon: Icon(
-            widget.obscureText ? Icons.visibility_off : Icons.visibility,
-            color: Colors.grey.shade600,
+            widget.obscureText
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
+            size: 20,
           ),
           onPressed: widget.onToggleVisibility,
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+        border: borderOr(
+          inputTheme.border as OutlineInputBorder?,
+          Colors.grey.shade300,
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
+        enabledBorder: borderOr(
+          inputTheme.enabledBorder as OutlineInputBorder?,
+          Colors.grey.shade300,
         ),
+        focusedBorder: borderOr(
+          inputTheme.focusedBorder as OutlineInputBorder?,
+          Theme.of(context).colorScheme.primary,
+        ),
+        errorBorder: borderOr(
+          inputTheme.errorBorder as OutlineInputBorder?,
+          Colors.red,
+        ),
+        focusedErrorBorder: borderOr(
+          inputTheme.focusedErrorBorder as OutlineInputBorder?,
+          Colors.red,
+        ),
+        filled: inputTheme.filled,
+        fillColor: inputTheme.fillColor ?? Colors.white,
+        contentPadding: inputTheme.contentPadding ??
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        hintStyle: inputTheme.hintStyle ??
+            TextStyle(color: Colors.grey.shade400, fontSize: 14),
+        prefixIconColor: inputTheme.prefixIconColor,
       ),
     );
   }

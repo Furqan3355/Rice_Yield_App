@@ -98,7 +98,7 @@ class AppTheme {
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: secondaryColor,
+        foregroundColor: primaryColor,
         textStyle: bodyMedium.copyWith(fontWeight: FontWeight.w500),
       ),
     ),

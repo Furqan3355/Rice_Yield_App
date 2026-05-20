@@ -86,6 +86,17 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final inputTheme = Theme.of(context).inputDecorationTheme;
+    final borderRadius = BorderRadius.circular(12);
+
+    InputBorder borderOr(OutlineInputBorder? fromTheme, Color fallback) {
+      return fromTheme ??
+          OutlineInputBorder(
+            borderRadius: borderRadius,
+            borderSide: BorderSide(color: fallback),
+          );
+    }
+
     return TextFormField(
       controller: widget.controller,
       keyboardType: widget.keyboardType,
@@ -102,47 +113,41 @@ class _CustomTextFieldState extends State<CustomTextField> {
           ? (_showError ? AutovalidateMode.always : AutovalidateMode.disabled)
           : AutovalidateMode.disabled,
       decoration: InputDecoration(
-        labelText: widget.labelText,
+        labelText: widget.labelText.isEmpty ? null : widget.labelText,
         hintText: widget.hintText,
         prefixIcon: widget.prefixIcon,
         suffixIcon: widget.suffixIcon,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+        border: borderOr(
+          inputTheme.border as OutlineInputBorder?,
+          Colors.grey.shade300,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+        enabledBorder: borderOr(
+          inputTheme.enabledBorder as OutlineInputBorder?,
+          Colors.grey.shade300,
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.primary,
-            width: 2,
-          ),
+        focusedBorder: borderOr(
+          inputTheme.focusedBorder as OutlineInputBorder?,
+          Theme.of(context).colorScheme.primary,
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red),
+        errorBorder: borderOr(
+          inputTheme.errorBorder as OutlineInputBorder?,
+          Colors.red,
         ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
+        focusedErrorBorder: borderOr(
+          inputTheme.focusedErrorBorder as OutlineInputBorder?,
+          Colors.red,
         ),
-        filled: true,
-        fillColor: widget.enabled ? Colors.white : Colors.grey.shade50,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
-        labelStyle: TextStyle(
-          color: Colors.grey.shade600,
-          fontSize: 16,
-        ),
-        hintStyle: TextStyle(
-          color: Colors.grey.shade400,
-          fontSize: 14,
-        ),
+        filled: inputTheme.filled,
+        fillColor: widget.enabled
+            ? (inputTheme.fillColor ?? Colors.white)
+            : Colors.grey.shade50,
+        contentPadding: inputTheme.contentPadding ??
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        labelStyle: inputTheme.labelStyle ??
+            TextStyle(color: Colors.grey.shade600, fontSize: 16),
+        hintStyle: inputTheme.hintStyle ??
+            TextStyle(color: Colors.grey.shade400, fontSize: 14),
+        prefixIconColor: inputTheme.prefixIconColor,
       ),
       style: TextStyle(
         color: Colors.grey.shade800,

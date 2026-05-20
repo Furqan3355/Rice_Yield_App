@@ -5,4 +5,5 @@ class AppAssets {
   static const String logoPrimary = 'assets/logos/logo-dark-bg-remove.png';
   static const String logoOnLight =
       'assets/logos/logo-white-background-removebg-preview.png';
+  static const String riceFieldImage = 'assets/Images/rice-field.avif';
 }
