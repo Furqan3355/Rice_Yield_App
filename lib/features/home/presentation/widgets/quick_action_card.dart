@@ -1,31 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:rice_yield_app/core/utils/app_colors.dart';
+import '/core/theme/theme.dart';
 
 class QuickActionCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
   const QuickActionCard({
     super.key,
     required this.icon,
     required this.label,
     required this.subtitle,
-    required this.color,
     required this.onTap,
   });
+
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
@@ -33,19 +34,19 @@ class QuickActionCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
+                    color: AppColors.primary,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, color: color, size: 26),
+                  child: Icon(icon, color: Colors.white, size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -54,23 +55,26 @@ class QuickActionCard extends StatelessWidget {
                     children: [
                       Text(
                         label,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                        style: AppTheme.bodyLarge.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.secondary,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
-                        style: TextStyle(
-                          fontSize: 13,
+                        style: AppTheme.bodyMedium.copyWith(
                           color: Colors.grey.shade500,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, color: Colors.grey.shade400),
+                Icon(
+                  Iconsax.arrow_right_3,
+                  color: Colors.grey.shade400,
+                  size: 20,
+                ),
               ],
             ),
           ),

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:rice_yield_app/core/utils/app_colors.dart';
 import 'package:rice_yield_app/features/reports/domain/report_model.dart';
+import '/core/theme/theme.dart';
 
 class ReportListTile extends StatelessWidget {
-  final Report report;
-
   const ReportListTile({super.key, required this.report});
+
+  final Report report;
 
   @override
   Widget build(BuildContext context) {
@@ -17,9 +19,9 @@ class ReportListTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -27,7 +29,7 @@ class ReportListTile extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {}, // Add navigation to report details if needed
+          onTap: () {},
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -35,13 +37,13 @@ class ReportListTile extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
+                    color: AppColors.primary,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     _getStatusIcon(report.status),
-                    color: statusColor,
-                    size: 24,
+                    color: Colors.white,
+                    size: 22,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -51,9 +53,9 @@ class ReportListTile extends StatelessWidget {
                     children: [
                       Text(
                         report.reportId ?? 'Report ${report.shortDate}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
+                        style: AppTheme.bodyLarge.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.secondary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -61,28 +63,34 @@ class ReportListTile extends StatelessWidget {
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          Icon(Iconsax.clock, size: 14, color: Colors.grey.shade600),
+                          Icon(
+                            Iconsax.clock,
+                            size: 14,
+                            color: Colors.grey.shade500,
+                          ),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
                               report.time,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey.shade600,
+                              style: AppTheme.bodyMedium.copyWith(
+                                color: Colors.grey.shade500,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Icon(Iconsax.weight_1, size: 14, color: Colors.grey.shade600),
+                          Icon(
+                            Iconsax.weight_1,
+                            size: 14,
+                            color: Colors.grey.shade500,
+                          ),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
                               '${report.totalWeight.toStringAsFixed(1)} kg',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey.shade600,
+                              style: AppTheme.bodyMedium.copyWith(
+                                color: Colors.grey.shade500,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -93,24 +101,24 @@ class ReportListTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                Flexible(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    report.status.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: statusColor,
+                      letterSpacing: 0.5,
                     ),
-                    child: Text(
-                      report.status.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: statusColor,
-                        letterSpacing: 0.5,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -123,19 +131,27 @@ class ReportListTile extends StatelessWidget {
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'completed': return Colors.green;
-      case 'processing': return Colors.orange;
-      case 'failed': return Colors.red;
-      default: return Colors.grey;
+      case 'completed':
+        return AppColors.secondary;
+      case 'processing':
+        return AppColors.warning;
+      case 'failed':
+        return AppColors.error;
+      default:
+        return Colors.grey.shade600;
     }
   }
 
   IconData _getStatusIcon(String status) {
     switch (status.toLowerCase()) {
-      case 'completed': return Iconsax.tick_circle;
-      case 'processing': return Iconsax.timer_1;
-      case 'failed': return Iconsax.close_circle;
-      default: return Iconsax.info_circle;
+      case 'completed':
+        return Iconsax.tick_circle;
+      case 'processing':
+        return Iconsax.timer_1;
+      case 'failed':
+        return Iconsax.close_circle;
+      default:
+        return Iconsax.document_text;
     }
   }
 }

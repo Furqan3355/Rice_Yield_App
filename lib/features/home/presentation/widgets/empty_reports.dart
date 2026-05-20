@@ -22,13 +22,13 @@ class EmptyReports extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: Colors.grey.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Iconsax.document_text,
               size: 48,
-              color: Colors.blue.shade300,
+              color: AppColors.primaryColor,
             ),
           ),
           const SizedBox(height: 20),
